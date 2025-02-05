@@ -1,9 +1,11 @@
 from langgraph.graph import END
-from langchain_core.messages import AIMessage
+from langchain_core.messages import AIMessage, HumanMessage
+from langgraph.constants import Send
 
-from schemas import GenerateAnalystsState, InterviewState
+from schemas import GenerateAnalystsState, InterviewState, ResearchGraphState
 
 
+#####* Analysts #####
 def should_continue(state: GenerateAnalystsState):
     """Return the next node to execute"""
 
@@ -16,6 +18,7 @@ def should_continue(state: GenerateAnalystsState):
     return END
 
 
+#####* Interview #####
 def route_messages(state: InterviewState, name: str = "expert"):
     """Route between question and answer"""
 
@@ -37,3 +40,28 @@ def route_messages(state: InterviewState, name: str = "expert"):
     if "Thank you so much for your help" in last_question.content:
         return "save_interview"
     return "ask_question"
+
+
+#####* Overall Research #####
+def initiate_all_interviews(state: ResearchGraphState):
+    """This is the "map" step where we run each interview sub-graph using Send API"""
+
+    # Check if human feedback
+    human_analyst_feedback = state.get("human_analyst_feedback")
+    if human_analyst_feedback:
+        # Return to create_analysts
+        return "create_analysts"
+
+    # Otherwise kick off interviews in parallel via Send() API
+    else:
+        topic = state["topic"]
+        return [
+            Send(
+                "conduct_interview",
+                {
+                    "analyst": analyst,
+                    "messages": [HumanMessage(content=f"So you said you were writing an article on {topic}?")],
+                },
+            )
+            for analyst in state["analysts"]
+        ]
