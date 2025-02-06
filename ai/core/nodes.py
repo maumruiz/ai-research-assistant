@@ -4,8 +4,8 @@ from langchain_openai import ChatOpenAI
 from langchain_community.tools.tavily_search import TavilySearchResults
 from langchain_community.document_loaders import WikipediaLoader
 
-from schemas import GenerateAnalystsState, Perspectives, InterviewState, SearchQuery, ResearchGraphState
-from prompts import (
+from core.schemas import GenerateAnalystsState, Perspectives, InterviewState, SearchQuery, ResearchGraphState
+from core.prompts import (
     analyst_instructions,
     question_instructions,
     search_instructions,

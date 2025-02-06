@@ -2,7 +2,7 @@ from langgraph.graph import END
 from langchain_core.messages import AIMessage, HumanMessage
 from langgraph.constants import Send
 
-from schemas import GenerateAnalystsState, InterviewState, ResearchGraphState
+from core.schemas import GenerateAnalystsState, InterviewState, ResearchGraphState
 
 
 #####* Analysts #####
