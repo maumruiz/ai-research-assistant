@@ -1,0 +1,42 @@
+volumes:
+    researcher-data:
+        driver: local
+services:
+    researcher-redis:
+        image: redis:6
+        healthcheck:
+            test: redis-cli ping
+            interval: 5s
+            timeout: 1s
+            retries: 5
+    researcher-postgres:
+        image: postgres:16
+        ports:
+            - "5433:5432"
+        environment:
+            POSTGRES_DB: postgres
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: postgres
+        volumes:
+            - researcher-data:/var/lib/postgresql/data
+        healthcheck:
+            test: pg_isready -U postgres
+            start_period: 10s
+            timeout: 1s
+            retries: 5
+            interval: 5s
+    researcher-api:
+        image: "researcher-v1"
+        ports:
+            - "8123:8000"
+        depends_on:
+            researcher-redis:
+                condition: service_healthy
+            researcher-postgres:
+                condition: service_healthy
+        environment:
+            REDIS_URI: redis://researcher-redis:6379
+            OPENAI_API_KEY: "${OPENAI_API_KEY}"
+            LANGSMITH_API_KEY: "${LANGCHAIN_API_KEY}"
+            TAVILY_API_KEY: "${TAVILY_API_KEY}"
+            POSTGRES_URI: postgres://postgres:postgres@researcher-postgres:5432/postgres?sslmode=disable
