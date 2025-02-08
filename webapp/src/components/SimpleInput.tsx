@@ -23,19 +23,27 @@ export default function SimpleInput() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
-    // Simulate an API call
-    setTimeout(() => {
-      console.log(values);
-      toast(
-        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
+    const response = await fetch("http://localhost:3000/api/researcher", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: values.message }),
+    });
+    const data = await response.json();
+
+    toast(
+      <div className="flex flex-col space-y-2">
+        <pre className="mt-2 w-[320px] rounded-md bg-slate-950 p-4">
           <code className="text-white">{JSON.stringify(values, null, 2)}</code>
         </pre>
-      );
-      form.reset(); // This will clear the input
-      setIsSubmitting(false);
-    }, 1000); // Simulating a 1-second delay
+        <pre className="mt-2 w-[320px] rounded-md bg-gray-200 p-4">
+          <code className="text-black">{data.message}</code>
+        </pre>
+      </div>
+    );
+    form.reset(); // This will clear the input
+    setIsSubmitting(false);
   }
 
   return (
