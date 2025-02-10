@@ -19,19 +19,11 @@ export async function POST(req: Request) {
     async start(controller) {
       for await (const chunk of streamResponse) {
         if (chunk.event === "metadata" || !chunk.data) continue;
-
         const filtered = {
           event: chunk.data.event,
           name: chunk.data.name,
           data: chunk.data.data,
         };
-        // You can format the chunk as needed. Here, we're converting to JSON text.
-        // const filtered = {
-        //   data: {
-        //     message: chunk.data.message,
-        //   },
-        // }
-
         controller.enqueue(new TextEncoder().encode(JSON.stringify(filtered)));
       }
       controller.close();
