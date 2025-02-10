@@ -9,6 +9,7 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { streamAsyncIterator } from "@/lib/utils";
 
 const formSchema = z.object({
   message: z.string().min(2).max(50),
@@ -25,12 +26,18 @@ export default function SimpleInput() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
-    const response = await fetch("http://localhost:3000/api/researcher", {
+    const stream = await fetch("http://localhost:3000/api/researcher", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ message: values.message }),
     });
-    const data = await response.json();
+
+    if (stream.body) {
+      const reader = stream.body.getReader();
+      for await (const chunk of streamAsyncIterator(reader)) {
+        console.log(chunk);
+      }
+    }
 
     toast(
       <div className="flex flex-col space-y-2">
@@ -38,7 +45,7 @@ export default function SimpleInput() {
           <code className="text-white">{JSON.stringify(values, null, 2)}</code>
         </pre>
         <pre className="mt-2 w-[320px] rounded-md bg-gray-200 p-4">
-          <code className="text-black">{data.message}</code>
+          <code className="text-black">{"data.message"}</code>
         </pre>
       </div>
     );
