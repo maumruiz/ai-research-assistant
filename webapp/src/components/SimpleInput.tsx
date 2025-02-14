@@ -16,9 +16,7 @@ export default function SimpleInput() {
     if (inputValue.trim()) {
       const dummyMarkdown = `
 # Welcome, ${inputValue}!
-
 This is a sample markdown content. Your input was: **${inputValue}**
-
 ## Features:
 - Dynamic rendering
 - Smooth transitions

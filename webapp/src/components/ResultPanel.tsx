@@ -1,4 +1,7 @@
 "use client";
+
+import ReactMarkdown from "react-markdown";
+
 import { useAppStore } from "@/hooks/useStore";
 
 function ResultPanel() {
@@ -11,8 +14,7 @@ function ResultPanel() {
         showSecondPanel ? "translate-x-0" : "translate-x-full"
       }`}
     >
-      {/* <ReactMarkdown>{markdownContent}</ReactMarkdown> */}
-      {report}
+      <ReactMarkdown className="prose">{report}</ReactMarkdown>
     </div>
   );
 }
