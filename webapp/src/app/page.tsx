@@ -1,9 +1,11 @@
-import SimpleInput from "@/components/SimpleInput";
+import FunctionalPanel from "@/components/FunctionalPanel";
+import ResultPanel from "@/components/ResultPanel";
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100">
-      <SimpleInput />
-    </div>
+    <main className="relative h-screen overflow-hidden">
+      <FunctionalPanel />
+      <ResultPanel />
+    </main>
   );
 }

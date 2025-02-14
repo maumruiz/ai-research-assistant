@@ -1,3 +1,4 @@
+name: ai-research-assistant
 volumes:
     researcher-data:
         driver: local
