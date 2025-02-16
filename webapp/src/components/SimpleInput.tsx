@@ -31,11 +31,11 @@ This is a sample markdown content. Your input was: **${inputValue}**
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-md px-4">
-      <div className="flex space-x-2">
+    <form onSubmit={handleSubmit} className="w-full p-4">
+      <div className="flex flex-col gap-4 space-x-2">
         <Input
           type="text"
-          placeholder="Enter something..."
+          placeholder="Enter a topic..."
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           className="grow"

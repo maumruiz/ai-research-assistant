@@ -9,6 +9,7 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { useAppStore } from "@/hooks/useStore";
 import { streamAsyncIterator } from "@/lib/utils";
 
 const formSchema = z.object({
@@ -17,6 +18,8 @@ const formSchema = z.object({
 
 export default function Step1Form() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const setStep = useAppStore((state) => state.setStep);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -25,6 +28,8 @@ export default function Step1Form() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    setStep(2);
+    return;
     setIsSubmitting(true);
     const stream = await fetch("http://localhost:3000/api/researcher", {
       method: "POST",
@@ -55,10 +60,7 @@ export default function Step1Form() {
 
   return (
     <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(onSubmit)}
-        className="flex w-full max-w-sm items-center space-x-2"
-      >
+      <form onSubmit={form.handleSubmit(onSubmit)} className="flex w-full flex-col gap-4">
         <FormField
           control={form.control}
           name="message"
@@ -66,7 +68,7 @@ export default function Step1Form() {
             <FormItem className="grow">
               {/* <FormLabel>Message</FormLabel> */}
               <FormControl>
-                <Input placeholder="message..." {...field} disabled={isSubmitting} />
+                <Input placeholder="Enter a topic..." {...field} disabled={isSubmitting} />
               </FormControl>
               {/* <FormDescription>This is your public display name.</FormDescription> */}
               <FormMessage />
