@@ -38,10 +38,10 @@ export const useAppStore = create<Store>()((set) => ({
   setStep: (step) => set({ step }),
   askForAnalysts: async (values) => {
     set({ isThinking: true });
-    const stream = await fetch("/api/researcher", {
+    const stream = await fetch("/api/analysts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: values.message }),
+      body: JSON.stringify({ message: values.message, nAnalysts: values.nAnalysts }),
     });
     if (stream.body) {
       const reader = stream.body.getReader();
