@@ -7,13 +7,22 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  // FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useAppStore } from "@/hooks/useStore";
 import { streamAsyncIterator } from "@/lib/utils";
 
 const formSchema = z.object({
   message: z.string().min(2).max(50),
+  nAnalysts: z.coerce.number().int().min(1).max(10),
 });
 
 export default function Step1Form() {
@@ -24,6 +33,7 @@ export default function Step1Form() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       message: "",
+      nAnalysts: 3,
     },
   });
 
@@ -66,7 +76,7 @@ export default function Step1Form() {
           name="message"
           render={({ field }) => (
             <FormItem className="grow">
-              {/* <FormLabel>Message</FormLabel> */}
+              <FormLabel>Research Topic</FormLabel>
               <FormControl>
                 <Input placeholder="Enter a topic..." {...field} disabled={isSubmitting} />
               </FormControl>
@@ -75,6 +85,27 @@ export default function Step1Form() {
             </FormItem>
           )}
         />
+
+        <FormField
+          control={form.control}
+          name="nAnalysts"
+          render={({ field }) => (
+            <FormItem className="grow">
+              <FormLabel>Number of experts to create</FormLabel>
+              <FormControl>
+                <Input
+                  type="number"
+                  placeholder="Number of experts"
+                  {...field}
+                  disabled={isSubmitting}
+                />
+              </FormControl>
+              {/* <FormDescription>This is your public display name.</FormDescription> */}
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         <Button type="submit" disabled={isSubmitting}>
           Submit
         </Button>
