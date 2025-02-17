@@ -16,7 +16,7 @@ function FunctionalPanel() {
         showSecondPanel ? "right-1/2" : "right-0"
       }`}
     >
-      <div className="container relative mx-auto size-full max-w-2xl ">
+      <div className="container relative mx-auto size-full max-w-3xl ">
         <div className="absolute left-0 top-0 w-full p-8 pt-20">
           <ProgressIndicator currentStep={step} totalSteps={3} />
         </div>

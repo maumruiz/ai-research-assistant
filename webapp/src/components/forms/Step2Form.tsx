@@ -1,13 +1,13 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { useAppStore } from "@/hooks/useStore";
 // import { useAppStore } from "@/hooks/useStore";
 
 const formSchema = z.object({
@@ -15,7 +15,7 @@ const formSchema = z.object({
 });
 
 export default function Step2Form() {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const isThinking = useAppStore((state) => state.isThinking);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -42,7 +42,7 @@ export default function Step2Form() {
                 <Input
                   placeholder="Give feedback about the experts"
                   {...field}
-                  disabled={isSubmitting}
+                  disabled={isThinking}
                 />
               </FormControl>
               {/* <FormDescription>This is your public display name.</FormDescription> */}
@@ -51,7 +51,7 @@ export default function Step2Form() {
           )}
         />
 
-        <Button type="submit" disabled={isSubmitting}>
+        <Button type="submit" disabled={isThinking}>
           Send Feedback
         </Button>
       </form>

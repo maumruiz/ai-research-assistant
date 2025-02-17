@@ -1,9 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
@@ -18,7 +16,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useAppStore } from "@/hooks/useStore";
-import { streamAsyncIterator } from "@/lib/utils";
 
 const formSchema = z.object({
   message: z.string().min(2).max(50),
@@ -26,8 +23,10 @@ const formSchema = z.object({
 });
 
 export default function Step1Form() {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const isThinking = useAppStore((state) => state.isThinking);
   const setStep = useAppStore((state) => state.setStep);
+  const askForAnalysts = useAppStore((state) => state.askForAnalysts);
+  const setNanalysts = useAppStore((state) => state.setNAnalysts);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -38,34 +37,9 @@ export default function Step1Form() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    askForAnalysts(values);
+    setNanalysts(values.nAnalysts);
     setStep(2);
-    return;
-    setIsSubmitting(true);
-    const stream = await fetch("http://localhost:3000/api/researcher", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: values.message }),
-    });
-
-    if (stream.body) {
-      const reader = stream.body.getReader();
-      for await (const chunk of streamAsyncIterator(reader)) {
-        console.log(chunk);
-      }
-    }
-
-    toast(
-      <div className="flex flex-col space-y-2">
-        <pre className="mt-2 w-[320px] rounded-md bg-slate-950 p-4">
-          <code className="text-white">{JSON.stringify(values, null, 2)}</code>
-        </pre>
-        <pre className="mt-2 w-[320px] rounded-md bg-gray-200 p-4">
-          <code className="text-black">{"data.message"}</code>
-        </pre>
-      </div>
-    );
-    form.reset(); // This will clear the input
-    setIsSubmitting(false);
   }
 
   return (
@@ -78,7 +52,7 @@ export default function Step1Form() {
             <FormItem className="grow">
               <FormLabel>Research Topic</FormLabel>
               <FormControl>
-                <Input placeholder="Enter a topic..." {...field} disabled={isSubmitting} />
+                <Input placeholder="Enter a topic..." {...field} disabled={isThinking} />
               </FormControl>
               {/* <FormDescription>This is your public display name.</FormDescription> */}
               <FormMessage />
@@ -97,7 +71,7 @@ export default function Step1Form() {
                   type="number"
                   placeholder="Number of experts"
                   {...field}
-                  disabled={isSubmitting}
+                  disabled={isThinking}
                 />
               </FormControl>
               {/* <FormDescription>This is your public display name.</FormDescription> */}
@@ -106,7 +80,7 @@ export default function Step1Form() {
           )}
         />
 
-        <Button type="submit" disabled={isSubmitting}>
+        <Button type="submit" disabled={isThinking}>
           Submit
         </Button>
       </form>

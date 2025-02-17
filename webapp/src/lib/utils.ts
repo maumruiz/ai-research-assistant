@@ -14,7 +14,7 @@ export function streamAsyncIterator(reader: ReadableStreamDefaultReader<Uint8Arr
           const { done, value } = await reader.read();
           if (done) return;
           const text = decoder.decode(value);
-          console.log(text);
+          // console.log(text);
           yield JSON.parse(text);
         }
       } finally {

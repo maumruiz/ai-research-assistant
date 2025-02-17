@@ -4,32 +4,47 @@ import { useAppStore } from "@/hooks/useStore";
 import Step2Form from "./forms/Step2Form";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
-
-const experts = Array.from({ length: 5 }, (_, i) => ({
-  id: i + 1,
-  name: `Expert ${i + 1}`,
-  description: `An expert in something`,
-}));
+import { Skeleton } from "./ui/skeleton";
 
 export default function Step2() {
+  const experts = useAppStore((state) => state.analysts);
+  const nExperts = useAppStore((state) => state.nAnalysts);
+  const isThinking = useAppStore((state) => state.isThinking);
   const setStep = useAppStore((state) => state.setStep);
+
+  console.log(nExperts);
 
   return (
     <div className="flex flex-col gap-8">
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        {experts.map((expert) => (
-          <Card key={expert.id}>
-            <CardContent className="flex items-center space-x-4 p-4">
-              <Avatar>
-                <AvatarFallback>{expert.name[0]}</AvatarFallback>
-              </Avatar>
-              <div>
-                <h3 className="font-semibold">{expert.name}</h3>
-                <p className="text-sm text-muted-foreground">{expert.description}</p>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+        {!isThinking &&
+          experts.map((expert) => (
+            <Card key={expert.name}>
+              <CardContent className="flex items-center space-x-4 p-4">
+                <Avatar>
+                  <AvatarFallback>{expert.name[0]}</AvatarFallback>
+                </Avatar>
+                <div>
+                  <h3 className="font-semibold">{expert.name}</h3>
+                  <p className="text-sm text-muted-foreground">{expert.role}</p>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        {isThinking &&
+          Array(nExperts)
+            .fill(null)
+            .map((_, i) => (
+              <Card key={i}>
+                <CardContent className="flex items-center space-x-4 p-4">
+                  <Skeleton className="size-12 rounded-full" />
+                  <div className="flex flex-col gap-2">
+                    <Skeleton className="h-4 w-[200px]" />
+                    <Skeleton className="h-4 w-[150px]" />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
       </div>
       <div>
         <Step2Form />
