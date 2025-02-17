@@ -1,4 +1,5 @@
 import { clsx, type ClassValue } from "clsx";
+import { toast } from "sonner";
 import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
@@ -15,7 +16,12 @@ export function streamAsyncIterator(reader: ReadableStreamDefaultReader<Uint8Arr
           if (done) return;
           const text = decoder.decode(value);
           // console.log(text);
-          yield JSON.parse(text);
+          try {
+            yield JSON.parse(text);
+          } catch (err) {
+            console.error(`Error parsing JSON: ${err} from streamed text ${text}`);
+            toast.error("Error parsing JSON from stream");
+          }
         }
       } finally {
         reader.releaseLock();
