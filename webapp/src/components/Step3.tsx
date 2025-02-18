@@ -1,18 +1,11 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
-import { useState, useEffect } from "react";
+
+import { useAppStore } from "@/hooks/useStore";
 
 export default function Step3() {
-  const [isThinking, setIsThinking] = useState(true);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsThinking(false);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, []);
+  const isThinking = useAppStore((state) => state.isThinking);
 
   return (
     <div className="py-8 text-center">
@@ -24,7 +17,7 @@ export default function Step3() {
       ) : (
         <div className="space-y-4">
           <h2 className="text-2xl font-bold">Thinking Complete!</h2>
-          <p>Your onboarding process is finished.</p>
+          <p>Your report is ready.</p>
         </div>
       )}
     </div>

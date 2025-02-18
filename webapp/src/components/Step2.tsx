@@ -13,7 +13,13 @@ export default function Step2() {
   const experts = useAppStore((state) => state.analysts);
   const nExperts = useAppStore((state) => state.nAnalysts);
   const isThinking = useAppStore((state) => state.isThinking);
-  // const setStep = useAppStore((state) => state.setStep);
+  const setStep = useAppStore((state) => state.setStep);
+  const generateReport = useAppStore((state) => state.generateReport);
+
+  const onGenerateReport = () => {
+    generateReport();
+    setStep(3);
+  };
 
   return (
     <div className="flex flex-col gap-8">
@@ -63,7 +69,7 @@ export default function Step2() {
       <div>
         <Step2Form />
       </div>
-      <Button type="button" disabled={isThinking} onClick={() => console.log("Generate Report")}>
+      <Button type="button" disabled={isThinking} onClick={onGenerateReport}>
         Generate Report
       </Button>
     </div>

@@ -25,6 +25,7 @@ interface Store {
   createThread: () => Promise<void>;
   askForAnalysts: (values: { message: string; nAnalysts: number }) => Promise<void>;
   giveFeedback: (values: { feedback: string }) => Promise<void>;
+  generateReport: () => Promise<void>;
 }
 
 export const useAppStore = create<Store>()((set, get) => ({
@@ -85,6 +86,24 @@ export const useAppStore = create<Store>()((set, get) => ({
         if (chunk.event === "on_chain_end" && chunk.name === "create_analysts") {
           set({ analysts: chunk.data.output.analysts });
         }
+      }
+    }
+    set({ isThinking: false });
+  },
+  generateReport: async () => {
+    set({ isThinking: true });
+    const stream = await fetch("/api/research", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ threadId: get().threadId }),
+    });
+    if (stream.body) {
+      const reader = stream.body.getReader();
+      for await (const chunk of streamAsyncIterator(reader)) {
+        if (chunk.event === "on_chain_end" && chunk.name === "finalize_report") {
+          set({ report: chunk.data.output.final_report, haveResponse: true });
+        }
+        console.log(chunk);
       }
     }
     set({ isThinking: false });
