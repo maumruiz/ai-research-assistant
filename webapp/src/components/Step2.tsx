@@ -13,9 +13,7 @@ export default function Step2() {
   const experts = useAppStore((state) => state.analysts);
   const nExperts = useAppStore((state) => state.nAnalysts);
   const isThinking = useAppStore((state) => state.isThinking);
-  const setStep = useAppStore((state) => state.setStep);
-
-  console.log(nExperts);
+  // const setStep = useAppStore((state) => state.setStep);
 
   return (
     <div className="flex flex-col gap-8">
@@ -65,12 +63,9 @@ export default function Step2() {
       <div>
         <Step2Form />
       </div>
-      <div className="flex justify-between">
-        <Button type="button" variant="outline" onClick={() => setStep(1)}>
-          Back
-        </Button>
-        <Button onClick={() => setStep(3)}>Next</Button>
-      </div>
+      <Button type="button" disabled={isThinking} onClick={() => console.log("Generate Report")}>
+        Generate Report
+      </Button>
     </div>
   );
 }

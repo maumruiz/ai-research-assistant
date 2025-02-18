@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { SendHorizonal } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -11,11 +12,12 @@ import { useAppStore } from "@/hooks/useStore";
 // import { useAppStore } from "@/hooks/useStore";
 
 const formSchema = z.object({
-  feedback: z.string().min(2).max(50),
+  feedback: z.string().min(2).max(400),
 });
 
 export default function Step2Form() {
   const isThinking = useAppStore((state) => state.isThinking);
+  const giveFeedback = useAppStore((state) => state.giveFeedback);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -25,13 +27,13 @@ export default function Step2Form() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
+    giveFeedback({ feedback: values.feedback });
     form.reset();
   }
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="flex w-full flex-col gap-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="flex w-full gap-4">
         <FormField
           control={form.control}
           name="feedback"
@@ -52,7 +54,7 @@ export default function Step2Form() {
         />
 
         <Button type="submit" disabled={isThinking}>
-          Send Feedback
+          <SendHorizonal className="size-4" />
         </Button>
       </form>
     </Form>

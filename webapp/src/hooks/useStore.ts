@@ -10,6 +10,7 @@ interface Analyst {
 }
 
 interface Store {
+  threadId: string;
   haveResponse: boolean;
   report: string;
   analysts: Analyst[];
@@ -21,10 +22,13 @@ interface Store {
   setAnalysts: (analysts: Analyst[]) => void;
   setNAnalysts: (nAnalysts: number) => void;
   setStep: (step: number) => void;
+  createThread: () => Promise<void>;
   askForAnalysts: (values: { message: string; nAnalysts: number }) => Promise<void>;
+  giveFeedback: (values: { feedback: string }) => Promise<void>;
 }
 
-export const useAppStore = create<Store>()((set) => ({
+export const useAppStore = create<Store>()((set, get) => ({
+  threadId: "",
   haveResponse: false,
   report: "",
   analysts: [],
@@ -36,12 +40,44 @@ export const useAppStore = create<Store>()((set) => ({
   setAnalysts: (analysts) => set({ analysts }),
   setNAnalysts: (nAnalysts) => set({ nAnalysts }),
   setStep: (step) => set({ step }),
+  createThread: async () => {
+    const response = await fetch("/api/thread", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    });
+    if (response.ok) {
+      const data = await response.json();
+      console.log(data);
+      set({ threadId: data.threadId });
+    }
+  },
   askForAnalysts: async (values) => {
     set({ isThinking: true });
     const stream = await fetch("/api/analysts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: values.message, nAnalysts: values.nAnalysts }),
+      body: JSON.stringify({
+        message: values.message,
+        nAnalysts: values.nAnalysts,
+        threadId: get().threadId,
+      }),
+    });
+    if (stream.body) {
+      const reader = stream.body.getReader();
+      for await (const chunk of streamAsyncIterator(reader)) {
+        if (chunk.event === "on_chain_end" && chunk.name === "create_analysts") {
+          set({ analysts: chunk.data.output.analysts });
+        }
+      }
+    }
+    set({ isThinking: false });
+  },
+  giveFeedback: async (values) => {
+    set({ isThinking: true });
+    const stream = await fetch("/api/feedback", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ feedback: values.feedback, threadId: get().threadId }),
     });
     if (stream.body) {
       const reader = stream.body.getReader();

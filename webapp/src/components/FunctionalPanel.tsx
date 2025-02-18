@@ -1,4 +1,6 @@
 "use client";
+import { useEffect } from "react";
+
 import { useAppStore } from "@/hooks/useStore";
 
 import ProgressIndicator from "./ProgressIndicator";
@@ -9,6 +11,12 @@ import Step3 from "./Step3";
 function FunctionalPanel() {
   const step = useAppStore((state) => state.step);
   const showSecondPanel = useAppStore((state) => state.haveResponse);
+  const createThread = useAppStore((state) => state.createThread);
+
+  useEffect(() => {
+    createThread();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div
