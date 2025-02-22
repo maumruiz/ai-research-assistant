@@ -4,8 +4,8 @@ import ResultPanel from "@/components/ResultPanel";
 export default function Home() {
   return (
     <main className="relative h-screen overflow-hidden">
-      <FunctionalPanel />
       <ResultPanel />
+      <FunctionalPanel />
     </main>
   );
 }

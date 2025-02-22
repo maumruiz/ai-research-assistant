@@ -19,15 +19,15 @@ export default function Expert({ expert }: { expert: Analyst }) {
         </Avatar>
         <div className="text-left">
           <h3 className="font-semibold">{expert.name}</h3>
-          <p className="text-sm text-muted-foreground">ID: {expert.id}</p>
+          {/* <p className="text-sm text-muted-foreground">ID: {expert.id}</p> */}
           <p className="text-sm text-muted-foreground">{expert.role}</p>
-          <p className="text-sm text-muted-foreground">
+          {/* <p className="text-sm text-muted-foreground">
             Interview: {JSON.stringify(expert.interview, null, 2)}
-          </p>
+          </p> */}
         </div>
         <div className="ml-auto cursor-pointer">
           <HoverCard>
-            <HoverCardTrigger asChild>
+            <HoverCardTrigger>
               <InfoIcon />
             </HoverCardTrigger>
             <HoverCardContent className="w-80">

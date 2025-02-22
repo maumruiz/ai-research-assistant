@@ -37,7 +37,7 @@ export default function Step2() {
                 </div>
                 <div className="ml-auto cursor-pointer">
                   <HoverCard>
-                    <HoverCardTrigger asChild>
+                    <HoverCardTrigger>
                       <InfoIcon />
                     </HoverCardTrigger>
                     <HoverCardContent className="w-80">
