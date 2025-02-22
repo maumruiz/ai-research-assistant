@@ -60,7 +60,9 @@ def initiate_all_interviews(state: ResearchGraphState):
                 "conduct_interview",
                 {
                     "analyst": analyst,
-                    "messages": [HumanMessage(content=f"So you said you were writing an article on {topic}?")],
+                    "messages": [
+                        HumanMessage(content=f"So you said you were writing an article on {topic}?")
+                    ],
                 },
             )
             for analyst in state["analysts"]

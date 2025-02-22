@@ -37,6 +37,9 @@ export function streamThread(threadId: string, input: any = null) {
           event: chunk.data.event,
           name: chunk.data.name,
           data: chunk.data.data,
+          metadata: chunk.data.metadata,
+          parents: chunk.data.parent_ids,
+          runId: chunk.data.run_id,
         };
         // logger.info(`Event: ${filtered.event} | Name: ${filtered.name} | Data: ${JSON.stringify(filtered.data)}`);
         const payload = JSON.stringify(filtered) + "\n";
