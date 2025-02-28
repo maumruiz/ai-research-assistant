@@ -1,4 +1,4 @@
-from langchain_core.messages import HumanMessage, SystemMessage, get_buffer_string
+from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
 
 from langchain_community.tools.tavily_search import TavilySearchResults
@@ -11,15 +11,15 @@ from app.schemas import (
     SearchQuery,
     ResearchGraphState,
     OutputState,
+    Outline,
 )
 from app.prompts import (
     analyst_instructions,
     question_instructions,
     search_instructions,
     answer_instructions,
-    section_writer_instructions,
+    outline_instructions,
     report_writer_instructions,
-    intro_conclusion_instructions,
 )
 
 llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
@@ -70,6 +70,7 @@ def generate_question(state: InterviewState):
     # Generate question
     system_message = question_instructions.format(goals=analyst.persona)
     question = llm.invoke([SystemMessage(content=system_message)] + messages)
+    question.name = "Interviewer"
 
     # Write messages to state
     return {"messages": [question]}
@@ -85,7 +86,7 @@ def search_web(state: InterviewState):
     )
 
     # Search
-    search_docs = tavily_search.invoke(search_query.search_query)
+    search_docs = tavily_search.invoke(search_query.query)
 
     # Format
     formatted_search_docs = "\n\n---\n\n".join(
@@ -105,7 +106,7 @@ def search_wikipedia(state: InterviewState):
     )
 
     # Search
-    search_docs = WikipediaLoader(query=search_query.search_query, load_max_docs=2).load()
+    search_docs = WikipediaLoader(query=search_query.query, load_max_docs=2).load()
 
     # Format
     formatted_search_docs = "\n\n---\n\n".join(
@@ -131,7 +132,7 @@ def generate_answer(state: InterviewState):
     answer = llm.invoke([SystemMessage(content=system_message)] + messages)
 
     # Name the message as coming from the expert
-    answer.name = "expert"
+    answer.name = "Expert"
 
     # Append it to state
     return {"messages": [answer]}
@@ -143,103 +144,52 @@ def save_interview(state: InterviewState):
     # Get messages
     messages = state["messages"]
 
-    print(messages)
-
-    # Convert interview to a string
-    interview = get_buffer_string(messages)
-
-    # Save to interviews key
-    return {"interview": interview}
-
-
-def write_section(state: InterviewState):
-    """Node to answer a question"""
-
-    # Get state
-    interview = state["interview"]
-    context = state["context"]
-    analyst = state["analyst"]
-
-    # Write section using either the gathered source docs from interview (context) or the interview itself (interview)
-    system_message = section_writer_instructions.format(focus=analyst.description)
-    section = llm.invoke(
-        [SystemMessage(content=system_message)]
-        + [HumanMessage(content=f"Use this source to write your section: {context}")]
+    interview = "\n\n".join(
+        f"### {m.name if m.name else 'Expert'}\n\n{m.content}" for m in messages
     )
 
-    # Append it to state
-    return {"sections": [section.content]}
+    # Save to interviews key
+    return {"interviews": [interview]}
 
 
 #####* Overall Research #####
-def write_report(state: ResearchGraphState):
-    # Full set of sections
-    sections = state["sections"]
+def create_outline(state: ResearchGraphState):
+    interviews = state["interviews"]
     topic = state["topic"]
 
-    # Concat all sections together
-    formatted_str_sections = "\n\n".join([f"{section}" for section in sections])
+    # Concat all interviews together
+    interviews_str = "\n\n".join(
+        [f"# Interview {i+1}{interview}\n\n" for i, interview in enumerate(interviews)]
+    )
 
-    # Summarize the sections into a final report
-    system_message = report_writer_instructions.format(topic=topic, context=formatted_str_sections)
+    system_message = outline_instructions.format(topic=topic)
+    structured_llm = llm.with_structured_output(Outline)
+    outline = structured_llm.invoke(
+        [SystemMessage(content=system_message)]
+        + [
+            HumanMessage(
+                content=f"Refine the outline based on your conversations with subject-matter experts:\n\nConversations:\n\n{interviews_str}"
+            )
+        ]
+    )
+    return {"outline": outline}
+
+
+def write_report(state: ResearchGraphState):
+    topic = state["topic"]
+    interviews = state["interviews"]
+    outline = state["outline"]
+
+    interviews_str = "\n\n".join(
+        [f"# Interview {i+1}{interview}\n\n" for i, interview in enumerate(interviews)]
+    )
+    outline_str = outline.as_str
+
+    system_message = report_writer_instructions.format(
+        topic=topic, conversations=interviews_str, outline=outline_str
+    )
     report = llm.invoke(
         [SystemMessage(content=system_message)]
-        + [HumanMessage(content=f"Write a report based upon these memos.")]
+        + [HumanMessage(content=f"Write a report based upon these conversations.")]
     )
-    return {"content": report.content}
-
-
-def write_introduction(state: ResearchGraphState):
-    # Full set of sections
-    sections = state["sections"]
-    topic = state["topic"]
-
-    # Concat all sections together
-    formatted_str_sections = "\n\n".join([f"{section}" for section in sections])
-
-    # Summarize the sections into a final report
-
-    instructions = intro_conclusion_instructions.format(
-        topic=topic, formatted_str_sections=formatted_str_sections
-    )
-    intro = llm.invoke([instructions] + [HumanMessage(content=f"Write the report introduction")])
-    return {"introduction": intro.content}
-
-
-def write_conclusion(state: ResearchGraphState):
-    # Full set of sections
-    sections = state["sections"]
-    topic = state["topic"]
-
-    # Concat all sections together
-    formatted_str_sections = "\n\n".join([f"{section}" for section in sections])
-
-    # Summarize the sections into a final report
-
-    instructions = intro_conclusion_instructions.format(
-        topic=topic, formatted_str_sections=formatted_str_sections
-    )
-    conclusion = llm.invoke([instructions] + [HumanMessage(content=f"Write the report conclusion")])
-    return {"conclusion": conclusion.content}
-
-
-def finalize_report(state: ResearchGraphState) -> OutputState:
-    """The is the "reduce" step where we gather all the sections, combine them, and reflect on them to write the intro/conclusion"""
-    # Save full final report
-    content = state["content"]
-    if content.startswith("## Insights"):
-        content = content.strip("## Insights")
-    if "## Sources" in content:
-        try:
-            content, sources = content.split("\n## Sources\n")
-        except:
-            sources = None
-    else:
-        sources = None
-
-    final_report = (
-        state["introduction"] + "\n\n---\n\n" + content + "\n\n---\n\n" + state["conclusion"]
-    )
-    if sources is not None:
-        final_report += "\n\n## Sources\n" + sources
-    return {"final_report": final_report}
+    return {"report": report.content}

@@ -1,5 +1,5 @@
 import operator
-from typing import Annotated, List
+from typing import Annotated, List, Optional
 from typing_extensions import TypedDict
 from pydantic import BaseModel, Field
 from langgraph.graph import MessagesState
@@ -35,8 +35,7 @@ class InterviewState(MessagesState):
     max_num_turns: int  # Number turns of conversation
     context: Annotated[list, operator.add]  # Source docs
     analyst: Analyst  # Analyst asking questions
-    interview: str  # Interview transcript
-    sections: list  # Final key we duplicate in outer state for Send() API
+    interviews: list  # Interview transcript. Final key we duplicate in outer state for Send() API
 
 
 class SearchQuery(BaseModel):
@@ -45,17 +44,55 @@ class SearchQuery(BaseModel):
     )
 
 
+###* Report #####
+class Subsection(BaseModel):
+    subsection_title: str = Field(..., title="Title of the subsection")
+    description: str = Field(..., title="Content of the subsection")
+
+    @property
+    def as_str(self) -> str:
+        return f"### {self.subsection_title}\n\n{self.description}".strip()
+
+
+class Section(BaseModel):
+    section_title: str = Field(..., title="Title of the section")
+    description: str = Field(..., title="Content of the section")
+    subsections: Optional[List[Subsection]] = Field(
+        default=None,
+        title="Titles and descriptions for each subsection of the report.",
+    )
+
+    @property
+    def as_str(self) -> str:
+        subsections = "\n\n".join(
+            f"### {subsection.subsection_title}\n\n{subsection.description}"
+            for subsection in self.subsections or []
+        )
+        return f"## {self.section_title}\n\n{self.description}\n\n{subsections}".strip()
+
+
+class Outline(BaseModel):
+    page_title: str = Field(..., title="Title of the report")
+    sections: List[Section] = Field(
+        default_factory=list,
+        title="Titles and descriptions for each section of the report.",
+    )
+
+    @property
+    def as_str(self) -> str:
+        sections = "\n\n".join(section.as_str for section in self.sections)
+        return f"# {self.page_title}\n\n{sections}".strip()
+
+
 #####* Overall Research #####
 class ResearchGraphState(TypedDict):
     topic: str  # Research topic
     max_analysts: int  # Number of analysts
     human_analyst_feedback: str  # Human feedback
     analysts: List[Analyst]  # Analyst asking questions
-    sections: Annotated[list, operator.add]  # Send() API key
-    introduction: str  # Introduction for the final report
-    content: str  # Content for the final report
-    conclusion: str  # Conclusion for the final report
-    final_report: str  # Final report
+    interviews: Annotated[list, operator.add]  # Send() API key
+    outline: Outline  # Report outline
+    report: str  # Final report
 
 
 class InputState(BaseModel):
