@@ -120,47 +120,47 @@ export const useAppStore = create<Store>()((set, get) => ({
           set({ analysts });
         }
 
-        // if starting ask_question, add interviewer message
-        if (
-          chunk.event === "on_chain_start" &&
-          (chunk.metadata.langgraph_node === "ask_question" ||
-            chunk.metadata.langgraph_node === "answer_question")
-        ) {
-          const role: "interviewer" | "expert" =
-            chunk.metadata.langgraph_node === "ask_question" ? "interviewer" : "expert";
-          const analystId = chunk.parents[1]; // Run id of the analyst created on "conduct_interview" node
-          const analysts = get().analysts.map((a) =>
-            a.id === analystId
-              ? {
-                  ...a,
-                  interview: [...(a.interview || []), { role, message: "" }],
-                }
-              : a
-          );
-          set({ analysts });
-        }
+        // // if starting ask_question, add interviewer message
+        // if (
+        //   chunk.event === "on_chain_start" &&
+        //   (chunk.metadata.langgraph_node === "ask_question" ||
+        //     chunk.metadata.langgraph_node === "answer_question")
+        // ) {
+        //   const role: "interviewer" | "expert" =
+        //     chunk.metadata.langgraph_node === "ask_question" ? "interviewer" : "expert";
+        //   const analystId = chunk.parents[1]; // Run id of the analyst created on "conduct_interview" node
+        //   const analysts = get().analysts.map((a) =>
+        //     a.id === analystId
+        //       ? {
+        //           ...a,
+        //           interview: [...(a.interview || []), { role, message: "" }],
+        //         }
+        //       : a
+        //   );
+        //   set({ analysts });
+        // }
 
-        // On chat model stream and on the "ask_question" node, concatenate the message to the last interviewer message
-        if (
-          chunk.event === "on_chat_model_stream" &&
-          (chunk.metadata.langgraph_node === "ask_question" ||
-            chunk.metadata.langgraph_node === "answer_question")
-        ) {
-          const analystId = chunk.parents[1]; // Run id of the analyst created on "conduct_interview" node
-          const analysts = get().analysts.map((a) =>
-            a.id === analystId
-              ? {
-                  ...a,
-                  interview: a.interview.map((msg, i) =>
-                    i === a.interview.length - 1
-                      ? { ...msg, message: msg.message + chunk.data.chunk.content }
-                      : msg
-                  ),
-                }
-              : a
-          );
-          set({ analysts });
-        }
+        // // On chat model stream and on the "ask_question" node, concatenate the message to the last interviewer message
+        // if (
+        //   chunk.event === "on_chat_model_stream" &&
+        //   (chunk.metadata.langgraph_node === "ask_question" ||
+        //     chunk.metadata.langgraph_node === "answer_question")
+        // ) {
+        //   const analystId = chunk.parents[1]; // Run id of the analyst created on "conduct_interview" node
+        //   const analysts = get().analysts.map((a) =>
+        //     a.id === analystId
+        //       ? {
+        //           ...a,
+        //           interview: a.interview.map((msg, i) =>
+        //             i === a.interview.length - 1
+        //               ? { ...msg, message: msg.message + chunk.data.chunk.content }
+        //               : msg
+        //           ),
+        //         }
+        //       : a
+        //   );
+        //   set({ analysts });
+        // }
 
         if (
           chunk.event === "on_chat_model_stream" &&
