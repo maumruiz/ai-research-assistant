@@ -102,4 +102,4 @@ class InputState(BaseModel):
 
 
 class OutputState(BaseModel):
-    final_report: str = Field(description="Final report")
+    report: str = Field(description="Final report")

@@ -4,7 +4,7 @@ from langchain_openai import ChatOpenAI
 from langchain_community.tools.tavily_search import TavilySearchResults
 from langchain_community.document_loaders import WikipediaLoader
 
-from app.schemas import (
+from core.schemas import (
     GenerateAnalystsState,
     Perspectives,
     InterviewState,
@@ -13,7 +13,7 @@ from app.schemas import (
     OutputState,
     Outline,
 )
-from app.prompts import (
+from core.prompts import (
     analyst_instructions,
     question_instructions,
     search_instructions,
@@ -175,7 +175,7 @@ def create_outline(state: ResearchGraphState):
     return {"outline": outline}
 
 
-def write_report(state: ResearchGraphState):
+def write_report(state: ResearchGraphState) -> OutputState:
     topic = state["topic"]
     interviews = state["interviews"]
     outline = state["outline"]
