@@ -14,13 +14,13 @@ class Analyst(BaseModel):
 
     @property
     def persona(self) -> str:
-        return (
-            f"Name: {self.name}\nRole: {self.role}\nAffiliation: {self.affiliation}\nDescription: {self.description}\n"
-        )
+        return f"Name: {self.name}\nRole: {self.role}\nAffiliation: {self.affiliation}\nDescription: {self.description}\n"
 
 
 class Perspectives(BaseModel):
-    analysts: List[Analyst] = Field(description="Comprehensive list of analysts with their roles and affiliations.")
+    analysts: List[Analyst] = Field(
+        description="Comprehensive list of analysts with their roles and affiliations."
+    )
 
 
 class GenerateAnalystsState(TypedDict):
@@ -40,7 +40,9 @@ class InterviewState(MessagesState):
 
 
 class SearchQuery(BaseModel):
-    search_query: str = Field(None, description="Search query for retrieval.")
+    query: str = Field(
+        None, description="Search query for retrieval to answer the user's question."
+    )
 
 
 #####* Overall Research #####
@@ -54,3 +56,13 @@ class ResearchGraphState(TypedDict):
     content: str  # Content for the final report
     conclusion: str  # Conclusion for the final report
     final_report: str  # Final report
+
+
+class InputState(BaseModel):
+    topic: str = Field(description="Research topic")
+    max_analysts: int = Field(3, description="Number of analysts")
+    human_analyst_feedback: str = Field(description="Human feedback for analysts")
+
+
+class OutputState(BaseModel):
+    final_report: str = Field(description="Final report")

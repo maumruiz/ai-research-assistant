@@ -4,7 +4,14 @@ from langchain_openai import ChatOpenAI
 from langchain_community.tools.tavily_search import TavilySearchResults
 from langchain_community.document_loaders import WikipediaLoader
 
-from app.schemas import GenerateAnalystsState, Perspectives, InterviewState, SearchQuery, ResearchGraphState
+from app.schemas import (
+    GenerateAnalystsState,
+    Perspectives,
+    InterviewState,
+    SearchQuery,
+    ResearchGraphState,
+    OutputState,
+)
 from app.prompts import (
     analyst_instructions,
     question_instructions,
@@ -39,7 +46,8 @@ def create_analysts(state: GenerateAnalystsState):
 
     # Generate question
     analysts = structured_llm.invoke(
-        [SystemMessage(content=system_message)] + [HumanMessage(content="Generate the set of analysts.")]
+        [SystemMessage(content=system_message)]
+        + [HumanMessage(content="Generate the set of analysts.")]
     )
 
     # Write the list of analysis to state
@@ -72,7 +80,9 @@ def search_web(state: InterviewState):
 
     # Search query
     structured_llm = llm.with_structured_output(SearchQuery)
-    search_query = structured_llm.invoke([SystemMessage(content=search_instructions)] + state["messages"])
+    search_query = structured_llm.invoke(
+        [SystemMessage(content=search_instructions)] + state["messages"]
+    )
 
     # Search
     search_docs = tavily_search.invoke(search_query.search_query)
@@ -90,7 +100,9 @@ def search_wikipedia(state: InterviewState):
 
     # Search query
     structured_llm = llm.with_structured_output(SearchQuery)
-    search_query = structured_llm.invoke([SystemMessage(content=search_instructions)] + state["messages"])
+    search_query = structured_llm.invoke(
+        [SystemMessage(content=search_instructions)] + state["messages"]
+    )
 
     # Search
     search_docs = WikipediaLoader(query=search_query.search_query, load_max_docs=2).load()
@@ -131,6 +143,8 @@ def save_interview(state: InterviewState):
     # Get messages
     messages = state["messages"]
 
+    print(messages)
+
     # Convert interview to a string
     interview = get_buffer_string(messages)
 
@@ -169,7 +183,8 @@ def write_report(state: ResearchGraphState):
     # Summarize the sections into a final report
     system_message = report_writer_instructions.format(topic=topic, context=formatted_str_sections)
     report = llm.invoke(
-        [SystemMessage(content=system_message)] + [HumanMessage(content=f"Write a report based upon these memos.")]
+        [SystemMessage(content=system_message)]
+        + [HumanMessage(content=f"Write a report based upon these memos.")]
     )
     return {"content": report.content}
 
@@ -184,7 +199,9 @@ def write_introduction(state: ResearchGraphState):
 
     # Summarize the sections into a final report
 
-    instructions = intro_conclusion_instructions.format(topic=topic, formatted_str_sections=formatted_str_sections)
+    instructions = intro_conclusion_instructions.format(
+        topic=topic, formatted_str_sections=formatted_str_sections
+    )
     intro = llm.invoke([instructions] + [HumanMessage(content=f"Write the report introduction")])
     return {"introduction": intro.content}
 
@@ -199,12 +216,14 @@ def write_conclusion(state: ResearchGraphState):
 
     # Summarize the sections into a final report
 
-    instructions = intro_conclusion_instructions.format(topic=topic, formatted_str_sections=formatted_str_sections)
+    instructions = intro_conclusion_instructions.format(
+        topic=topic, formatted_str_sections=formatted_str_sections
+    )
     conclusion = llm.invoke([instructions] + [HumanMessage(content=f"Write the report conclusion")])
     return {"conclusion": conclusion.content}
 
 
-def finalize_report(state: ResearchGraphState):
+def finalize_report(state: ResearchGraphState) -> OutputState:
     """The is the "reduce" step where we gather all the sections, combine them, and reflect on them to write the intro/conclusion"""
     # Save full final report
     content = state["content"]
@@ -218,7 +237,9 @@ def finalize_report(state: ResearchGraphState):
     else:
         sources = None
 
-    final_report = state["introduction"] + "\n\n---\n\n" + content + "\n\n---\n\n" + state["conclusion"]
+    final_report = (
+        state["introduction"] + "\n\n---\n\n" + content + "\n\n---\n\n" + state["conclusion"]
+    )
     if sources is not None:
         final_report += "\n\n## Sources\n" + sources
     return {"final_report": final_report}
