@@ -1,6 +1,5 @@
 import { InfoIcon } from "lucide-react";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { useAppStore } from "@/hooks/useStore";
 
@@ -28,9 +27,12 @@ export default function Step2() {
           experts.map((expert) => (
             <Card key={expert.name}>
               <CardContent className="flex items-center gap-4 p-4">
-                <Avatar>
-                  <AvatarFallback>{expert.name[0]}</AvatarFallback>
-                </Avatar>
+                <div
+                  className={"size-8 scale-125 bg-[-32px_0] bg-no-repeat"}
+                  style={{
+                    backgroundImage: `url('/avatars/${expert.avatar || 1}.png')`,
+                  }}
+                ></div>
                 <div>
                   <h3 className="font-semibold">{expert.name}</h3>
                   <p className="text-sm text-muted-foreground">{expert.role}</p>

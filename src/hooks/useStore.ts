@@ -8,6 +8,7 @@ interface InterviewMessage {
 }
 export interface Analyst {
   id: string;
+  avatar: number;
   name: string;
   description: string;
   role: string;
@@ -77,7 +78,13 @@ export const useAppStore = create<Store>()((set, get) => ({
       const reader = stream.body.getReader();
       for await (const chunk of streamAsyncIterator(reader)) {
         if (chunk.event === "on_chain_end" && chunk.name === "create_analysts") {
-          set({ analysts: chunk.data.output.analysts });
+          const newAnalysts = chunk.data.output.analysts.map((a: Analyst) => ({
+            ...a,
+            id: "",
+            interview: [],
+            avatar: Math.floor(Math.random() * 25) + 1,
+          }));
+          set({ analysts: newAnalysts });
         }
       }
     }
@@ -94,7 +101,13 @@ export const useAppStore = create<Store>()((set, get) => ({
       const reader = stream.body.getReader();
       for await (const chunk of streamAsyncIterator(reader)) {
         if (chunk.event === "on_chain_end" && chunk.name === "create_analysts") {
-          set({ analysts: chunk.data.output.analysts });
+          const newAnalysts = chunk.data.output.analysts.map((a: Analyst) => ({
+            ...a,
+            id: "",
+            interview: [],
+            avatar: Math.floor(Math.random() * 25) + 1,
+          }));
+          set({ analysts: newAnalysts });
         }
       }
     }
