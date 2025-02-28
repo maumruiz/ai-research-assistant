@@ -3,13 +3,23 @@ from typing import Annotated, List, Optional
 from typing_extensions import TypedDict
 from pydantic import BaseModel, Field
 
-from langchain_core.messages import AnyMessage, AIMessage, HumanMessage, ToolMessage
+from langchain_core.messages import AnyMessage, AIMessage, HumanMessage, ToolMessage, SystemMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_core.runnables import RunnableLambda
+from langchain_core.runnables import RunnableLambda, chain
 from langgraph.graph import MessagesState
 
 from nodes.analysts import Analyst
 from nodes.llms import fast_llm
+
+from langchain_community.tools.tavily_search import TavilySearchResults
+from langchain_community.document_loaders import WikipediaLoader
+
+tavily_search = TavilySearchResults(max_results=3, include_raw_content=True)
+
+# import logging
+
+# logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+
 
 ###* Prompts
 question_instructions = """
@@ -27,6 +37,14 @@ Remember to stay in character throughout your response, reflecting the persona a
 
 Here is your specific perspective:
 {persona}
+"""
+
+search_instructions = """
+You will be given a conversation between an analyst and an expert. 
+Your goal is to generate a well-structured query for use in retrieval and / or web-search related to the conversation.
+First, analyze the full conversation.
+Pay particular attention to the final question posed by the analyst.
+Convert this final question into a well-structured web search query
 """
 
 generate_question_prompt = ChatPromptTemplate.from_messages(
@@ -49,9 +67,17 @@ class InterviewState(TypedDict):
     messages: Annotated[List[AnyMessage], operator.add]
     references: Annotated[Optional[dict], update_references]
     analyst: Analyst
+    context: Annotated[List[dict], operator.add]
+
+
+class SearchQuery(BaseModel):
+    query: str = Field(
+        None, description="Search query for retrieval to answer the user's question."
+    )
 
 
 ###* Utils
+@chain
 def swap_roles(state: InterviewState, name: str):
     converted = []
     for message in state["messages"]:
@@ -61,8 +87,9 @@ def swap_roles(state: InterviewState, name: str):
     return {"messages": converted}
 
 
+@chain
 def tag_with_name(ai_message: AIMessage, name: str):
-    ai_message.name = name
+    ai_message.name = "DrEmily"
     return ai_message
 
 
@@ -73,18 +100,35 @@ def generate_question(state: InterviewState):
     # Get state
     analyst = state["analyst"]
 
-    # Generate question
-    # system_message = question_instructions.format(goals=analyst.persona)
-    # question = llm.invoke([SystemMessage(content=system_message)] + messages)
-
     generate_question_chain = (
-        RunnableLambda(swap_roles).bind(name=analyst.name)
+        swap_roles.bind(name=analyst.name)
         | generate_question_prompt.partial(persona=analyst.persona)
         | fast_llm
-        | RunnableLambda(tag_with_name).bind(name=analyst.name)
+        | tag_with_name.bind(name=analyst.name)
     )
 
     question = generate_question_chain.invoke(state)
+    # logging.info("Generated question: %s", question)
 
     # Write messages to state
     return {"messages": [question]}
+
+
+def search_web(state: InterviewState):
+    """Retrieve docs from web search"""
+    structured_llm = fast_llm.with_structured_output(SearchQuery)
+    search_query = structured_llm.invoke(
+        [SystemMessage(content=search_instructions)] + state["messages"]
+    )
+    search_docs = tavily_search.invoke(search_query.query)
+    return {"context": [search_docs]}
+
+
+def search_wikipedia(state: InterviewState):
+    """Retrieve docs from wikipedia"""
+    structured_llm = llm.with_structured_output(SearchQuery)
+    search_query = structured_llm.invoke(
+        [SystemMessage(content=search_instructions)] + state["messages"]
+    )
+    search_docs = WikipediaLoader(query=search_query.search_query, load_max_docs=2).load()
+    return {"context": [formatted_search_docs]}

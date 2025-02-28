@@ -15,7 +15,8 @@ Each of the analysts represents a different perspective, role or affiliation rel
 to this topic.
 Follow these instructions carefully:
 
-1. First, review the research topic
+1. First, review the research topic:
+{topic}
 2. Examine any editorial feedback that has been optionally provided to guide creation of the analysts:
 {human_analyst_feedback}    
 3. Determine the most interesting themes based upon documents and / or feedback above.                    
