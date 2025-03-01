@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { useAppStore } from "@/hooks/useStore";
 
 const formSchema = z.object({
-  message: z.string().min(2).max(50),
+  message: z.string().min(2),
   nAnalysts: z.coerce.number().int().min(1).max(10),
 });
 
