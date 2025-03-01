@@ -70,3 +70,27 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  .animate-thinking span {
+    animation: thinking 1.4s infinite ease-in-out;
+  }
+
+  .animate-thinking span:nth-child(1) {
+    animation-delay: -0.32s;
+  }
+  .animate-thinking span:nth-child(2) {
+    animation-delay: -0.16s;
+  }
+}
+
+@keyframes thinking {
+  0%,
+  80%,
+  100% {
+    opacity: 0;
+  }
+  40% {
+    opacity: 1;
+  }
+}

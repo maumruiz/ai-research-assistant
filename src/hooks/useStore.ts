@@ -2,10 +2,6 @@ import { create } from "zustand";
 
 import { streamAsyncIterator } from "@/lib/utils";
 
-interface InterviewMessage {
-  role: "interviewer" | "expert";
-  message: string;
-}
 export interface Analyst {
   id: string;
   avatar: number;
@@ -13,7 +9,8 @@ export interface Analyst {
   description: string;
   role: string;
   affiliation: string;
-  interview: InterviewMessage[];
+  interview: string;
+  turn: "asking" | "answering";
 }
 
 interface Store {
@@ -81,7 +78,7 @@ export const useAppStore = create<Store>()((set, get) => ({
           const newAnalysts = chunk.data.output.analysts.map((a: Analyst) => ({
             ...a,
             id: "",
-            interview: [],
+            interview: "",
             avatar: Math.floor(Math.random() * 25) + 1,
           }));
           set({ analysts: newAnalysts });
@@ -104,7 +101,7 @@ export const useAppStore = create<Store>()((set, get) => ({
           const newAnalysts = chunk.data.output.analysts.map((a: Analyst) => ({
             ...a,
             id: "",
-            interview: [],
+            interview: "",
             avatar: Math.floor(Math.random() * 25) + 1,
           }));
           set({ analysts: newAnalysts });
@@ -133,47 +130,28 @@ export const useAppStore = create<Store>()((set, get) => ({
           set({ analysts });
         }
 
-        // // if starting ask_question, add interviewer message
-        // if (
-        //   chunk.event === "on_chain_start" &&
-        //   (chunk.metadata.langgraph_node === "ask_question" ||
-        //     chunk.metadata.langgraph_node === "answer_question")
-        // ) {
-        //   const role: "interviewer" | "expert" =
-        //     chunk.metadata.langgraph_node === "ask_question" ? "interviewer" : "expert";
-        //   const analystId = chunk.parents[1]; // Run id of the analyst created on "conduct_interview" node
-        //   const analysts = get().analysts.map((a) =>
-        //     a.id === analystId
-        //       ? {
-        //           ...a,
-        //           interview: [...(a.interview || []), { role, message: "" }],
-        //         }
-        //       : a
-        //   );
-        //   set({ analysts });
-        // }
+        if (chunk.event === "on_chain_end" && chunk.name === "conduct_interview") {
+          console.log(
+            `Finished interview of ${chunk.data.input.analyst.name} on run ${chunk.runId}`
+          );
+          const analysts = get().analysts.map((a) =>
+            a.id === chunk.runId ? { ...a, interview: chunk.data.output.interviews[0] } : a
+          );
+          set({ analysts });
+        }
 
-        // // On chat model stream and on the "ask_question" node, concatenate the message to the last interviewer message
-        // if (
-        //   chunk.event === "on_chat_model_stream" &&
-        //   (chunk.metadata.langgraph_node === "ask_question" ||
-        //     chunk.metadata.langgraph_node === "answer_question")
-        // ) {
-        //   const analystId = chunk.parents[1]; // Run id of the analyst created on "conduct_interview" node
-        //   const analysts = get().analysts.map((a) =>
-        //     a.id === analystId
-        //       ? {
-        //           ...a,
-        //           interview: a.interview.map((msg, i) =>
-        //             i === a.interview.length - 1
-        //               ? { ...msg, message: msg.message + chunk.data.chunk.content }
-        //               : msg
-        //           ),
-        //         }
-        //       : a
-        //   );
-        //   set({ analysts });
-        // }
+        // if starting ask_question or answer question, set turn
+        if (
+          chunk.event === "on_chain_start" &&
+          (chunk.metadata.langgraph_node === "ask_question" ||
+            chunk.metadata.langgraph_node === "answer_question")
+        ) {
+          const turn: "asking" | "answering" =
+            chunk.metadata.langgraph_node === "ask_question" ? "asking" : "answering";
+          const analystId = chunk.parents[1]; // Run id of the analyst created on "conduct_interview" node
+          const analysts = get().analysts.map((a) => (a.id === analystId ? { ...a, turn } : a));
+          set({ analysts });
+        }
 
         if (
           chunk.event === "on_chat_model_stream" &&
