@@ -88,12 +88,14 @@ The architecture of the AI Research and Report Generator have three key modules:
 
 ### Code Structure
 
+```
 .
 ├── ai                      # AI workflow files
 │   ├── core                # Modules used for the graph
 │   ├── .env                # Environment variables file
 │   └── docker-compose.yaml # To deploy the graph
 └── ...                     # NextJs files
+```
 
 ### Env variables
 
